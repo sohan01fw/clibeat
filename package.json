@@ -1,0 +1,37 @@
+{
+  "name": "@beatcliapp/clibeat",
+  "private": false,
+  "version": "1.0.0",
+  "description": "CliBeat: a colorful terminal music player for YouTube and YouTube Music links.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sohan01fw/Beatcli.git"
+  },
+  "homepage": "https://github.com/sohan01fw/Beatcli#readme",
+  "bugs": {
+    "url": "https://github.com/sohan01fw/Beatcli/issues"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "node --no-warnings --import tsx src/index.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "check": "tsc --noEmit",
+    "start": "node --no-warnings dist/index.js"
+  },
+  "bin": {
+    "clibeat": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

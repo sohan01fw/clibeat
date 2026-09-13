@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Generated build and npm artifacts
+dist/
+*.tgz
+
+# Logs and local configuration
+*.log
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
