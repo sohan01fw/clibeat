@@ -1,7 +1,17 @@
 {
-  "name": "beatcli",
-  "private": true,
-  "version": "0.0.0",
+  "name": "@sohancwac/beatcli",
+  "private": false,
+  "version": "1.0.0",
+  "description": "A colorful terminal music player for YouTube and YouTube Music links.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sohan01fw/Beatcli.git"
+  },
+  "homepage": "https://github.com/sohan01fw/Beatcli#readme",
+  "bugs": {
+    "url": "https://github.com/sohan01fw/Beatcli/issues"
+  },
   "type": "module",
   "scripts": {
     "dev": "node --no-warnings --import tsx src/index.ts",
