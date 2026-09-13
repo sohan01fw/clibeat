@@ -7,7 +7,7 @@ export type PlayerState = { title: string; time: number; duration: number; pause
 
 export class Player {
   readonly state: PlayerState;
-  private readonly socketPath = `/tmp/beatcli-${process.pid}.sock`;
+  private readonly socketPath = `/tmp/clibeat-${process.pid}.sock`;
   private socket?: Socket;
   private buffer = "";
   private closed = false;
@@ -16,6 +16,7 @@ export class Player {
     private readonly onExit: () => void,
     private readonly onVolumeChange: (volume: number) => void,
     private readonly onProgressChange: (seconds: number) => void,
+    private readonly onTitleChange: (title: string) => void,
     initialVolume: number,
     private readonly initialPosition: number,
   ) {
@@ -51,7 +52,7 @@ export class Player {
     try {
       const event = JSON.parse(message) as { event?: string; id?: number; data?: unknown };
       if (event.event !== "property-change") return;
-      if (event.id === 1 && typeof event.data === "string") this.state.title = event.data;
+      if (event.id === 1 && typeof event.data === "string") { this.state.title = event.data; this.onTitleChange(event.data); }
       if (event.id === 2 && typeof event.data === "number") { this.state.time = event.data; this.onProgressChange(event.data); }
       if (event.id === 3 && typeof event.data === "number") this.state.duration = event.data;
       if (event.id === 4 && typeof event.data === "boolean") this.state.paused = event.data;

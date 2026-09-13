@@ -10,5 +10,5 @@ export function checkRequirements(): string[] {
 
 export function printRequirementsError(missing: string[]) {
   console.error(`Missing required program${missing.length > 1 ? "s" : ""}: ${missing.join(", ")}`);
-  console.error("Install them, then run BeatCLI again. On Ubuntu/Debian: sudo apt install mpv yt-dlp");
+  console.error("Install them, then run CliBeat again. On Ubuntu/Debian: sudo apt install mpv yt-dlp");
 }

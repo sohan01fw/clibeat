@@ -10,9 +10,9 @@ export class Database {
   private readonly db: DatabaseSync;
 
   constructor() {
-    const dataDirectory = join(process.env.XDG_DATA_HOME || join(homedir(), ".local", "share"), "beatcli");
+    const dataDirectory = join(process.env.XDG_DATA_HOME || join(homedir(), ".local", "share"), "clibeat");
     mkdirSync(dataDirectory, { recursive: true });
-    this.db = new DatabaseSync(join(dataDirectory, "beatcli.db"));
+    this.db = new DatabaseSync(join(dataDirectory, "clibeat.db"));
     this.migrate();
   }
 
@@ -76,6 +76,9 @@ export class Database {
     this.db.prepare("INSERT INTO music (url, title) VALUES (?, ?) ON CONFLICT(url) DO UPDATE SET title = COALESCE(excluded.title, music.title)").run(url, title ?? null);
     return this.db.prepare("SELECT id, url, title, progress_seconds AS progressSeconds, added_at AS addedAt FROM music WHERE url = ?").get(url) as SavedMusic;
   }
+  getMusicByUrl(url: string): SavedMusic | undefined {
+    return this.db.prepare("SELECT id, url, title, progress_seconds AS progressSeconds, added_at AS addedAt FROM music WHERE url = ?").get(url) as SavedMusic | undefined;
+  }
   listMusic(): SavedMusic[] {
     return this.db.prepare("SELECT id, url, title, progress_seconds AS progressSeconds, added_at AS addedAt FROM music ORDER BY id DESC").all() as SavedMusic[];
   }
@@ -92,6 +95,9 @@ export class Database {
   }
   setMusicProgress(id: number, seconds: number) {
     this.db.prepare("UPDATE music SET progress_seconds = ? WHERE id = ?").run(Math.max(0, seconds), id);
+  }
+  setMusicTitle(id: number, title: string) {
+    this.db.prepare("UPDATE music SET title = ? WHERE id = ?").run(title, id);
   }
   resetMusicProgressAtPosition(position: number) {
     const track = this.getMusicAtPosition(position);

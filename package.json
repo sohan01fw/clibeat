@@ -1,8 +1,8 @@
 {
-  "name": "@beatcliapp/cli",
+  "name": "@beatcliapp/clibeat",
   "private": false,
   "version": "1.0.0",
-  "description": "A colorful terminal music player for YouTube and YouTube Music links.",
+  "description": "CliBeat: a colorful terminal music player for YouTube and YouTube Music links.",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -20,7 +20,7 @@
     "start": "node --no-warnings dist/index.js"
   },
   "bin": {
-    "beatcli": "dist/index.js"
+    "clibeat": "dist/index.js"
   },
   "files": [
     "dist",

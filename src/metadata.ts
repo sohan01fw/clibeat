@@ -12,7 +12,7 @@ export function normalizeMusicUrl(rawUrl: string): string {
 
 export function getTitle(url: string): Promise<string | undefined> {
   return new Promise((resolve) => {
-    const command = spawn("yt-dlp", ["--no-playlist", "--skip-download", "--print", "%(title)s", url]);
+    const command = spawn("yt-dlp", ["--no-playlist", "--skip-download", "--socket-timeout", "8", "--print", "%(title)s", url]);
     let output = "";
     command.stdout.on("data", (chunk) => { output += chunk.toString(); });
     command.on("error", () => resolve(undefined));

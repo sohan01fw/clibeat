@@ -13,28 +13,33 @@ let resumePosition = 0;
 const usage = () => console.log(`Usage:
   npm run dev -- <YouTube URL> [--theme <name>]
   npm run dev -- theme list|set <name>|remove <name>
-  npm run dev -- music list|add <URL>|play <number>|reset <number>|remove <number>`);
+  npm run dev -- list|add <URL>|play <number>|reset <number>|remove <number>`);
 const printThemes = () => {
   const active = db.getActiveTheme().name;
   console.log(["Themes:", "", ...db.listThemes().map((theme) => `  ${theme.name.padEnd(10)} ${theme.description}${theme.name === active ? "  (active)" : ""}`)].join("\n"));
 };
 const printMusic = async () => {
   const music = db.listMusic();
-  for (const track of music) {
+  await Promise.all(music.map(async (track) => {
     if (!track.title) {
       const title = await getTitle(track.url);
       if (title) track.title = db.saveMusic(track.url, title).title;
     }
-  }
-  console.log(music.length ? ["Saved music:", "", ...music.map((track, index) => `  ${String(index + 1).padEnd(4)} ${track.title ?? "Unknown title"}${track.progressSeconds ? `  (resume ${Math.floor(track.progressSeconds / 60)}:${String(Math.floor(track.progressSeconds % 60)).padStart(2, "0")})` : ""}`)].join("\n") : "No saved music yet. Add one with: music add <URL>");
+  }));
+  console.log(music.length ? ["Saved tracks:", "", ...music.map((track, index) => `  ${String(index + 1).padEnd(4)} ${track.title ?? "Unknown title"}${track.progressSeconds ? `  (resume ${Math.floor(track.progressSeconds / 60)}:${String(Math.floor(track.progressSeconds % 60)).padStart(2, "0")})` : ""}`)].join("\n") : "No saved tracks yet. Add one with: add <URL>");
 };
 
-async function saveWithTitle(rawUrl: string) {
+function saveTrack(rawUrl: string) {
   const url = normalizeMusicUrl(rawUrl);
-  const title = await getTitle(url);
   // Older saves may contain share/timestamp variants; compare their canonical forms too.
-  const existing = db.listMusic().find((track) => normalizeMusicUrl(track.url) === url);
-  return db.saveMusic(existing?.url ?? url, title);
+  const existing = db.getMusicByUrl(url) ?? db.listMusic().find((track) => normalizeMusicUrl(track.url) === url);
+  return db.saveMusic(existing?.url ?? url);
+}
+
+async function saveTrackWithTitle(rawUrl: string) {
+  const track = saveTrack(rawUrl);
+  const title = await getTitle(track.url);
+  return title ? db.saveMusic(track.url, title) : track;
 }
 
 async function runCommand(): Promise<string | undefined> {
@@ -50,23 +55,31 @@ async function runCommand(): Promise<string | undefined> {
     } else usage();
     return;
   }
-  if (group === "music") {
-    if (action === "list") await printMusic();
-    else if (action === "add" && /^https?:\/\//i.test(value ?? "")) {
-      const track = await saveWithTitle(value);
+  if (group === "list") {
+    await printMusic();
+    return;
+  }
+  if (group === "add" && /^https?:\/\//i.test(action ?? "")) {
+      const track = await saveTrackWithTitle(action);
       console.log(`Saved: ${track.title ?? "Unknown title"}`);
-    }
-    else if (action === "remove" && Number.isInteger(Number(value)) && Number(value) > 0) console.log(db.removeMusicAtPosition(Number(value)) ? `Removed music #${value}.` : `Music #${value} not found.`);
-    else if (action === "reset" && Number.isInteger(Number(value)) && Number(value) > 0) console.log(db.resetMusicProgressAtPosition(Number(value)) ? `Reset playback position for music #${value}.` : `Music #${value} not found.`);
-    else if (action === "play" && Number.isInteger(Number(value)) && Number(value) > 0) {
-      const track = db.getMusicAtPosition(Number(value));
-      if (!track) { console.error(`Music #${value} not found.`); return; }
+    return;
+  }
+  if (group === "remove" && Number.isInteger(Number(action)) && Number(action) > 0) {
+    console.log(db.removeMusicAtPosition(Number(action)) ? `Removed track #${action}.` : `Track #${action} not found.`);
+    return;
+  }
+  if (group === "reset" && Number.isInteger(Number(action)) && Number(action) > 0) {
+    console.log(db.resetMusicProgressAtPosition(Number(action)) ? `Reset playback position for track #${action}.` : `Track #${action} not found.`);
+    return;
+  }
+  if (group === "play" && Number.isInteger(Number(action)) && Number(action) > 0) {
+      const track = db.getMusicAtPosition(Number(action));
+      if (!track) { console.error(`Track #${action} not found.`); return; }
       selectedMusicId = track.id;
       resumePosition = track.progressSeconds;
       return track.url;
-    } else usage();
-    return;
   }
+  if (["add", "remove", "reset", "play"].includes(group)) { usage(); return; }
   return args.find((arg) => /^https?:\/\//i.test(arg));
 }
 
@@ -90,7 +103,8 @@ if (!theme) {
   printThemes();
   process.exit(1);
 }
-const savedTrack = await saveWithTitle(commandUrl);
+// Direct playback must not wait for yt-dlp metadata: mpv already resolves the URL.
+const savedTrack = saveTrack(commandUrl);
 selectedMusicId ??= savedTrack.id;
 resumePosition ||= savedTrack.progressSeconds;
 
@@ -98,11 +112,26 @@ let closed = false;
 const cleanup = () => {
   if (closed) return;
   closed = true;
+  if (selectedMusicId) db.setMusicProgress(selectedMusicId, player.state.time);
   if (process.stdin.isTTY) process.stdin.setRawMode(false);
   process.stdout.write("\x1b[?25h\x1b[0m\n");
   process.exit();
 };
-const player = new Player(commandUrl, cleanup, (volume) => db.setVolume(volume), (seconds) => { if (selectedMusicId) db.setMusicProgress(selectedMusicId, seconds); }, db.getVolume(), resumePosition);
+let lastProgressSave = 0;
+const player = new Player(
+  commandUrl,
+  cleanup,
+  (volume) => db.setVolume(volume),
+  (seconds) => {
+    if (selectedMusicId && (seconds < lastProgressSave || seconds - lastProgressSave >= 5)) {
+      db.setMusicProgress(selectedMusicId, seconds);
+      lastProgressSave = seconds;
+    }
+  },
+  (title) => { if (selectedMusicId) db.setMusicTitle(selectedMusicId, title); },
+  db.getVolume(),
+  resumePosition,
+);
 if (process.stdin.isTTY) {
   process.stdin.setEncoding("utf8");
   process.stdin.setRawMode(true);
@@ -120,4 +149,4 @@ if (process.stdin.isTTY) {
 process.on("SIGINT", () => player.quit());
 process.stdout.write("\x1b[?25l");
 player.start();
-setInterval(() => draw(player.state, theme), 80);
+setInterval(() => draw(player.state, theme), 120);
