@@ -1,5 +1,5 @@
 {
-  "name": "@sohancwac/beatcli",
+  "name": "@beatcliapp/cli",
   "private": false,
   "version": "1.0.0",
   "description": "A colorful terminal music player for YouTube and YouTube Music links.",
