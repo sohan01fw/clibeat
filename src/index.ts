@@ -5,6 +5,7 @@ import { getTitle, normalizeMusicUrl } from "./metadata.js";
 import { Player } from "./player.js";
 import { draw } from "./ui.js";
 import { checkRequirements, printRequirementsError } from "./requirements.js";
+import { notifyIfUpdateAvailable } from "./update-check.js";
 
 const db = new Database();
 const args = process.argv.slice(2);
@@ -99,6 +100,7 @@ async function runCommand(): Promise<string | undefined> {
   return args.find((arg) => /^https?:\/\//i.test(arg));
 }
 
+await notifyIfUpdateAvailable();
 const commandUrl = await runCommand();
 if (!commandUrl) {
   if (!args.length) usage();
