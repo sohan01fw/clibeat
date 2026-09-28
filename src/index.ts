@@ -11,9 +11,21 @@ const args = process.argv.slice(2);
 let selectedMusicId: number | undefined;
 let resumePosition = 0;
 const usage = () => console.log(`Usage:
-  npm run dev -- <YouTube URL> [--theme <name>]
-  npm run dev -- theme list|set <name>|remove <name>
-  npm run dev -- list|add <URL>|play <number>|reset <number>|remove <number>`);
+  clibeat <YouTube URL> [--theme <name>]
+  clibeat <command>
+
+Commands:
+  theme list
+  theme set <name>
+  theme remove <name>
+  list
+  add <YouTube URL>
+  play <number>
+  reset <number>
+  remove <number>
+
+Example:
+  clibeat play 1`);
 const printThemes = () => {
   const active = db.getActiveTheme().name;
   console.log(["Themes:", "", ...db.listThemes().map((theme) => `  ${theme.name.padEnd(10)} ${theme.description}${theme.name === active ? "  (active)" : ""}`)].join("\n"));
@@ -53,6 +65,10 @@ async function runCommand(): Promise<string | undefined> {
       const result = db.removeTheme(value);
       console.log(result === "removed" ? `Removed theme: ${value}` : result === "active" ? "Choose another active theme before removing this one." : `Theme not found: ${value}`);
     } else usage();
+    return;
+  }
+  if (group === "help" || group === "--help" || group === "-h") {
+    usage();
     return;
   }
   if (group === "list") {
