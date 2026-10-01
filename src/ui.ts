@@ -15,7 +15,7 @@ function format(seconds: number) {
     : `${minutes}:${secs.toString().padStart(2, "0")}`;
 }
 
-export function draw(state: PlayerState, theme: Theme) {
+export function draw(state: PlayerState, theme: Theme, showSupport = false) {
   const width = Math.max(18, Math.min(52, (process.stdout.columns || 80) - 28));
   const progress = state.duration
     ? Math.max(0, Math.min(1, state.time / state.duration))
@@ -35,7 +35,10 @@ export function draw(state: PlayerState, theme: Theme) {
   const title =
     state.title.length > 64 ? `${state.title.slice(0, 61)}...` : state.title;
   const bar = `${color(theme.played, "━".repeat(position))}${color(theme.highlight, "●")}${color(theme.track, "─".repeat(Math.max(0, width - position - 1)))}`;
+  const support = showSupport
+    ? `\n  ${color(theme.highlight, "Support CliBeat:")} https://link.payoneer.com/Token?t=7C231D7E70F64751AA05F406A3419CAF&src=tpl\n`
+    : "";
   process.stdout.write(
-    `\x1b[2J\x1b[H\n  ${color(theme.accent, "◢")}${color(theme.highlight, " CLIBEAT ")}${color(theme.accent, "◣")}  \x1b[2m${theme.name}\x1b[0m\n\n  \x1b[1;97m${title}\x1b[0m\n\n  ${color(theme.highlight, waves)}\n\n  ${bar}  \x1b[97m${format(state.time)} / ${format(state.duration)}\x1b[0m\n\n  ${color(theme.status, state.paused ? "PAUSED" : "PLAYING")}   volume: ${color(theme.highlight, `${Math.round(state.volume)}%`)}\n\n  \x1b[2mspace play/pause   ←/→ seek   r restart   ↑/↓ volume   q quit\x1b[0m\n`,
+    `\x1b[2J\x1b[H\n  ${color(theme.accent, "◢")}${color(theme.highlight, " CLIBEAT ")}${color(theme.accent, "◣")}  \x1b[2m${theme.name}\x1b[0m\n\n  \x1b[1;97m${title}\x1b[0m\n\n  ${color(theme.highlight, waves)}\n\n  ${bar}  \x1b[97m${format(state.time)} / ${format(state.duration)}\x1b[0m\n\n  ${color(theme.status, state.paused ? "PAUSED" : "PLAYING")}   volume: ${color(theme.highlight, `${Math.round(state.volume)}%`)}${support}\n  \x1b[2mspace play/pause   ←/→ seek   r restart   ↑/↓ volume   s support   q quit\x1b[0m\n`,
   );
 }

@@ -136,6 +136,7 @@ const cleanup = () => {
   process.exit();
 };
 let lastProgressSave = 0;
+let supportVisibleUntil = 0;
 const player = new Player(
   commandUrl,
   cleanup,
@@ -160,6 +161,7 @@ if (process.stdin.isTTY) {
     if (key === "\u001b[D") player.seek(-5);
     if (key === "\u001b[C") player.seek(5);
     if (key === "r") player.restart();
+    if (key === "s") supportVisibleUntil = Date.now() + 60_000;
     if (key === "\u001b[A") player.changeVolume(5);
     if (key === "\u001b[B") player.changeVolume(-5);
   });
@@ -167,4 +169,4 @@ if (process.stdin.isTTY) {
 process.on("SIGINT", () => player.quit());
 process.stdout.write("\x1b[?25l");
 player.start();
-setInterval(() => draw(player.state, theme), 120);
+setInterval(() => draw(player.state, theme, Date.now() < supportVisibleUntil), 120);

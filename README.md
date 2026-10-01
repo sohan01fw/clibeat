@@ -31,6 +31,16 @@ clibeat remove 1
 
 Music positions are displayed from `1` and automatically reorder after additions or removals. During playback, use `space` to pause, arrow keys to seek/change volume, `r` to restart, and `q` to quit.
 
+## Support CliBeat
+
+If CliBeat helps you, you can support its development here:
+
+https://link.payoneer.com/Token?t=7C231D7E70F64751AA05F406A3419CAF&src=tpl
+
+Scan the QR code on a phone:
+
+![Support CliBeat via Payoneer](assets/support-qr.png)
+
 ## Local data
 
 CliBeat stores its SQLite database at `~/.local/share/clibeat/clibeat.db`. It contains saved music, playback positions, selected theme, and volume.
