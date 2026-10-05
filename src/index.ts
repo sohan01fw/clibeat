@@ -130,7 +130,10 @@ let closed = false;
 const cleanup = () => {
   if (closed) return;
   closed = true;
-  if (selectedMusicId) db.setMusicProgress(selectedMusicId, player.state.time);
+  if (selectedMusicId) {
+    const completed = player.state.duration > 0 && player.state.time >= player.state.duration - 1;
+    db.setMusicProgress(selectedMusicId, completed ? 0 : player.state.time);
+  }
   if (process.stdin.isTTY) process.stdin.setRawMode(false);
   process.stdout.write("\x1b[?25h\x1b[0m\n");
   process.exit();
